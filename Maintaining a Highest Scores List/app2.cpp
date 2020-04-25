@@ -1,66 +1,128 @@
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include <iomanip>
+#include <ctime>
+#include <cstdlib>
 
-const char InputFile[] = "ass2dat   a.txt";
+#include <stdio.h>
+
+using namespace std;
+
+const char InputFile[] = "ass2data.txt";
 int MaxNumberOfScores = 32;
 
-
-class Score {
-
+/*class Score {
+private:
+    char name[16];
+    int score;
+    Date date;
+public:
+    Score();
+    Score(char name[], int score, Date date);
+    getName(){return name;};
+    getScore(){return score;};
+    getDate(){return date;};
+    Score operator+(const Score& s);
 };
 
-processInputFile(&fin, &newScore) {
+Score(char name[], int score, Date date)
+{
+    name = name;
+    score = score;
+    date = date;
+}
+
+Score::Score operator+(const Score& s)
+{
+    Score score;
+    score.name = this->score;
+}
+*/
+
+time_t processInputFile(ifstream &fin){
+    char* tempName = new char[16];
+    char tempDate[13];
+    int tempScore;
+
+    fin.read(tempName, 16);
+    fin >> tempDate >> tempScore;
+
+    for (int i = 16; i-- > 0;)
+    {
+        if (isblank(tempName[i]))
+            tempName[i] = 0;
+        else
+            break;
+    }
+
+    int year, month, day;
+    char buffer[32];
+
+    if (!isdigit(tempDate[2]))
+        if (ispunct(tempDate[2]))
+        {
+            strncpy(buffer, tempDate, 2);
+            month = stoi(buffer);
+            strncpy(buffer, &tempDate[3], 2);
+            day = stoi(buffer);
+            //strcpy(buffer, "20");
+
+            strncpy(buffer, &tempDate[6], 2);
+            year = stoi(buffer);
+        }
+
+    delete[] tempName;
+
+    //cout << month << '/' << day << '/' << year << endl;
+
+    tm d = {0};
+    d.tm_year = year;
+    d.tm_mon = month - 1;
+    d.tm_mday = day;
+
+    time_t date = mkdate(&d);
+
+
+
+    struct tm * timeinfo;
+
+    timeinfo = localtime(&date);
+    printf ("Current local time and date: %s", asctime(timeinfo));
+
+    /*char buf[80];
+    strftime(buf, 80,"%m/%d/%y", &date);
+    puts(buf);
+    */
+
+   /* if (isalpha(tempDate[2]))
+//        date.tm_mon =
+
+    else if (isdigit(tempDate[2])
+
+
+    else
+
+*/
+
+    //cout << tempName << " | " << tempDate << " | " << tempScore << '/' ;
 
 }
 
 int main()
 {
-    Score scores[MaxNumberOfScores];
+//    Score scores[MaxNumberOfScores];
 
     ifstream fin(InputFile);
     if (!fin)
     {
-        cerr << "Unable to open input file " << InputFile << endl;
+        cout << "Unable to open input file " << InputFile << endl;
         exit(1);
     }
 
-    std::ofstream ScoresFile;
-    ScoresFile.open("ScoresFile.txt", out | trunc | binary);
-    //fout.close();
+    time_t date = processInputFile(fin);
 
-    Score newScore;
-    unsigned numScores;
-    bool updateScores = false;
-    //eraseScoresFile(ScoresFile);
+//    printf(asctime(&date));
 
-    while (processInputFile(fin, newScore))  // read a record from input file
-    {
-        // read binary Scores file
-        numScores = getScoresFromFile(ScoresFile, scores);
-
-        if (numScores < MaxNumberOfScores)    // Less than 10 Scores
-        {
-            scores[numScores++] = newScore;
-            updateScores = true;
-        }
-        else if (scores[numScores - 1] < newScore)   // newScore > lowest of Top Scores
-        {
-            scores[numScores - 1] = newScore;        // add newScore to Top Scores
-            updateScores = true;
-        }
-        else updateScores = false;
-
-        if (updateScores)
-        {
-            sort(scores, numScores);                 // sort Scores
-
-            for (auto i = 0U; i < numScores; ++i)
-                cout << left << setw(3) << i+1 << scores[i] << endl;
-            cout << "----------------------------------\n";
-
-            // Write binary Scores file
-            writeScoresToFile(ScoresFile, scores, numScores);
-        }
-    }
+    return(0);
 }
