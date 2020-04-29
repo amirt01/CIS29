@@ -74,21 +74,21 @@ time_t processInputFile(ifstream &fin){
 
     delete[] tempName;
 
-    //cout << month << '/' << day << '/' << year << endl;
-
+    cout << month << '/' << day << '/' << year << endl;
+    //cout << year << endl;
     tm d = {0};
-    d.tm_year = year;
-    d.tm_mon = month - 1;
+    d.tm_isdst = -1;
+    d.tm_year = year + 100;
+    d.tm_mon = month;
     d.tm_mday = day;
+    time_t date = mktime(&d);
 
-    time_t date = mkdate(&d);
-
-
-
-    struct tm * timeinfo;
+    tm * timeinfo;
 
     timeinfo = localtime(&date);
-    printf ("Current local time and date: %s", asctime(timeinfo));
+
+    cout << date << endl;
+    cout << timeinfo -> tm_mon << '/' << timeinfo -> tm_mday << '/' << timeinfo -> tm_year + 1900;
 
     /*char buf[80];
     strftime(buf, 80,"%m/%d/%y", &date);

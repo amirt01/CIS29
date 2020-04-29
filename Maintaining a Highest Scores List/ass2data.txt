@@ -1,7 +1,7 @@
-Gertrude        08Aug15      34
+Gertrude        10/19/16      34
 Mac the Knife                42
 Luke Skywalker  06Aug14      59
-Harry S Truman  10/19/16     52
+Harry S Truman       52
 Martha                       30
 Clyde           09/11/17     98
 Clyde           1525122744   31
