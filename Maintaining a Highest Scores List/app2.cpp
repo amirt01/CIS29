@@ -3,110 +3,171 @@
 #include <cstring>
 #include <iomanip>
 #include <ctime>
-#include <cstdlib>
-
-#include <stdio.h>
+#include <map>
 
 using namespace std;
 
 const char InputFile[] = "ass2data.txt";
 int MaxNumberOfScores = 32;
 
-/*class Score {
+class Date {
+private:
+    time_t date;
+public:
+    Date(){ date = time(0); }
+    //Date(const Date&) = default;
+    Date(time_t d) { date = d; } // Date in time_t format
+    Date(const char*);
+    friend ostream& operator<<(ostream&, const Date&);
+};
+//Date::Date(const Date&) {}
+Date::Date(const char* RawDate)
+{
+    int year, month, day;
+
+    tm d = {0};
+    d.tm_isdst = -1;
+
+    char buffer[32];
+    if (!isdigit(RawDate[2]))
+    {
+        if (ispunct(RawDate[2])) // Convert from mm/dd/yy or mm-dd-yy
+        {
+            strncpy(buffer, RawDate, 2);
+            d.tm_mon = stoi(buffer);
+            strncpy(buffer, &RawDate[3], 2);
+            d.tm_mday = stoi(buffer);
+            strncpy(buffer, &RawDate[6], 2);
+            d.tm_year = stoi(buffer) + 100;
+        }
+        else // Convert from ddmmmyy
+        {
+            strncpy(buffer,RawDate, 2);
+            d.tm_mday = stoi(buffer);
+            strncpy(buffer, &RawDate[5], 2);
+            d.tm_year = stoi(buffer) + 100;
+            strncpy(buffer, &RawDate[2], 3);
+
+            for (char &c : buffer)
+                c = tolower(c);
+
+            const char months[12][4] = { "jan",
+                                         "feb",
+                                         "mar",
+                                         "apr",
+                                         "may",
+                                         "jun",
+                                         "jul",
+                                         "aug",
+                                         "sep",
+                                         "oct",
+                                         "nov",
+                                         "dec" };
+
+            for (int i = 0; i < 12; i++)
+                if (strcmp(buffer, months[i]) == 0)
+                    d.tm_mon = i;
+        }
+        date = mktime(&d);
+    }
+    else
+        date = stoi(RawDate); // Already in the correct format
+}
+
+ostream& operator<<(ostream &output, const Date &d)
+{
+    struct tm* dateInfo = localtime(&d.date);
+    char buffer [32];
+
+    dateInfo->tm_mon;
+    strftime (buffer, 80, "%m/%d/%y", dateInfo);
+    output << buffer;
+    return output;
+}
+
+class Score {
 private:
     char name[16];
     int score;
     Date date;
 public:
     Score();
-    Score(char name[], int score, Date date);
-    getName(){return name;};
-    getScore(){return score;};
-    getDate(){return date;};
-    Score operator+(const Score& s);
+    Score(char*, int, Date);
+    char* getName(){ return name; };
+    int getScore(){ return score; };
+    Date getDate(){ return date; };
+    //Score operator+(const Score& s);
 };
 
-Score(char name[], int score, Date date)
+Score::Score(char* n, int s, Date d)
 {
-    name = name;
-    score = score;
-    date = date;
+    strcpy(name, n);
+    score = s;
+    date = d;
 }
 
-Score::Score operator+(const Score& s)
+Date processDate(char* RawDate)
 {
-    Score score;
-    score.name = this->score;
-}
-*/
-
-time_t processInputFile(ifstream &fin){
-    char* tempName = new char[16];
-    char tempDate[13];
-    int tempScore;
-
-    fin.read(tempName, 16);
-    fin >> tempDate >> tempScore;
-
-    for (int i = 16; i-- > 0;)
-    {
-        if (isblank(tempName[i]))
-            tempName[i] = 0;
-        else
-            break;
-    }
-
     int year, month, day;
     char buffer[32];
-
-    if (!isdigit(tempDate[2]))
-        if (ispunct(tempDate[2]))
+    if (!isdigit(RawDate[2]))
+    {
+        if (ispunct(RawDate[2])) // mm/dd/yy or mm-dd-yy
         {
-            strncpy(buffer, tempDate, 2);
+            strncpy(buffer, RawDate, 2);
             month = stoi(buffer);
-            strncpy(buffer, &tempDate[3], 2);
+            strncpy(buffer, &RawDate[3], 2);
             day = stoi(buffer);
-            //strcpy(buffer, "20");
-
-            strncpy(buffer, &tempDate[6], 2);
+            strncpy(buffer, &RawDate[6], 2);
             year = stoi(buffer);
         }
+        else // ddmmmyy
+        {
+            strncpy(buffer,RawDate, 2);
+            day = stoi(buffer);
+            strncpy(buffer, &RawDate[5], 2);
+            year = stoi(buffer);
+            strncpy(buffer, &RawDate[2], 3);
 
-    delete[] tempName;
+            for (char &c : buffer)
+                c = tolower(c);
 
-    cout << month << '/' << day << '/' << year << endl;
-    //cout << year << endl;
+            const char months[12][4] = { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
+
+            for (int i = 0; i < 12; i++)
+                if (strcmp(buffer, months[i]) == 0)
+                    month = i;
+        }
+    }
+    else
+        return(stoi(RawDate));
+
     tm d = {0};
     d.tm_isdst = -1;
     d.tm_year = year + 100;
     d.tm_mon = month;
     d.tm_mday = day;
-    time_t date = mktime(&d);
 
-    tm * timeinfo;
+    return(Date(mktime(&d)));
+}
 
-    timeinfo = localtime(&date);
+Score processInputFile(ifstream &fin){
+    char* name = new char[16];
+    char date[13];
+    int score;
 
-    cout << date << endl;
-    cout << timeinfo -> tm_mon << '/' << timeinfo -> tm_mday << '/' << timeinfo -> tm_year + 1900;
+    fin.read(name, 16);
+    fin >> date >> score;
 
-    /*char buf[80];
-    strftime(buf, 80,"%m/%d/%y", &date);
-    puts(buf);
-    */
+    for (int i = 16; i > 0; i--)
+    {
+        if (isblank(name[i]))
+            name[i] = 0;
+        else
+            break;
+    }
 
-   /* if (isalpha(tempDate[2]))
-//        date.tm_mon =
-
-    else if (isdigit(tempDate[2])
-
-
-    else
-
-*/
-
-    //cout << tempName << " | " << tempDate << " | " << tempScore << '/' ;
-
+    return(Score(name, score, processDate(date)));
 }
 
 int main()
@@ -120,9 +181,11 @@ int main()
         exit(1);
     }
 
-    time_t date = processInputFile(fin);
+    Score score = processInputFile(fin);
 
-//    printf(asctime(&date));
+    tm * timeinfo;
+
+    cout << score.getDate();
 
     return(0);
 }
