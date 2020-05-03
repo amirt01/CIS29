@@ -3,12 +3,13 @@
 #include <cstring>
 #include <iomanip>
 #include <ctime>
-#include <map>
+#include <algorithm>
 
 using namespace std;
 
+const char ScoresFile[] = "ass2scoresfile.dat";
 const char InputFile[] = "ass2data.txt";
-int MaxNumberOfScores = 32;
+const int MaxNumberOfScores = 10;
 
 class Date {
 private:
@@ -51,18 +52,8 @@ Date::Date(const char* RawDate)
             for (char &c : buffer)
                 c = tolower(c);
 
-            const char months[12][4] = { "jan",
-                                         "feb",
-                                         "mar",
-                                         "apr",
-                                         "may",
-                                         "jun",
-                                         "jul",
-                                         "aug",
-                                         "sep",
-                                         "oct",
-                                         "nov",
-                                         "dec" };
+            const char months[12][4] = { "jan", "feb", "mar", "apr", "may", "jun",
+                                         "jul", "aug", "sep", "oct", "nov", "dec" };
 
             for (int i = 0; i < 12; i++)
                 if (strcmp(buffer, months[i]) == 0)
@@ -70,8 +61,10 @@ Date::Date(const char* RawDate)
         }
         date = mktime(&d);
     }
-    else
+    else if (isdigit(RawDate[2]))
         date = stoi(RawDate); // Already in the correct format
+    else
+        date = time(0);
 }
 
 ostream& operator<<(ostream &output, const Date &d)
@@ -91,12 +84,13 @@ private:
     int score;
     Date date;
 public:
-    Score();
+    Score(){};
     Score(char*, int, Date);
     char* getName(){ return name; };
     int getScore(){ return score; };
     Date getDate(){ return date; };
-    //Score operator+(const Score& s);
+    friend ostream& operator<<(ostream&, const Score&);
+    friend bool operator<(const Score&, const Score&);
 };
 
 Score::Score(char* n, int s, Date d)
@@ -104,6 +98,11 @@ Score::Score(char* n, int s, Date d)
     strcpy(name, n);
     score = s;
     date = d;
+}
+
+bool operator<(const Score& a, const Score& b)
+{
+    return a.score < b.score ;
 }
 
 Date processDate(char* RawDate)
@@ -121,7 +120,7 @@ Date processDate(char* RawDate)
             strncpy(buffer, &RawDate[6], 2);
             year = stoi(buffer);
         }
-        else // ddmmmyy
+        else if (isalpha(RawDate[2]))// ddmmmyy
         {
             strncpy(buffer,RawDate, 2);
             day = stoi(buffer);
@@ -132,16 +131,18 @@ Date processDate(char* RawDate)
             for (char &c : buffer)
                 c = tolower(c);
 
-            const char months[12][4] = { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
+            const char months[12][4] = { "jan", "feb", "mar", "apr", "may", "jun",
+                                         "jul", "aug", "sep", "oct", "nov", "dec" };
 
             for (int i = 0; i < 12; i++)
                 if (strcmp(buffer, months[i]) == 0)
                     month = i;
         }
+        else
+            return Date(time(0));
     }
     else
         return(stoi(RawDate));
-
     tm d = {0};
     d.tm_isdst = -1;
     d.tm_year = year + 100;
@@ -151,28 +152,97 @@ Date processDate(char* RawDate)
     return(Date(mktime(&d)));
 }
 
+ostream& operator<<(ostream &output, const Score &s)
+{
+    output << setw(19) << s.name << setw(2) << s.score << "  " << setw(8) << s.date << endl;
+    return output;
+}
+
 Score processInputFile(ifstream &fin){
     char* name = new char[16];
-    char date[13];
-    int score;
+    char* date = new char[13];
+    char* score = new char[2];
+    int nameLen = 15;
 
     fin.read(name, 16);
-    fin >> date >> score;
+    fin.read(date, 13);
+    fin.read(score, 3);
 
-    for (int i = 16; i > 0; i--)
+    while(nameLen > 0)
     {
-        if (isblank(name[i]))
-            name[i] = 0;
+        if (isblank(name[nameLen]))
+            name[nameLen] = 0;
+        else
+            break;
+        nameLen--;
+    }
+
+    for (int i = 13; i > 0; i--)
+    {
+        if (isblank(date[i]))
+            date[i] = 0;
         else
             break;
     }
 
-    return(Score(name, score, processDate(date)));
+    score[2] = 0;
+
+    char* cleanName = new char[nameLen]; // solve bug in copying
+    strcpy(cleanName, name);             // char pointer to char array
+    delete name;
+    return(Score(cleanName, stoi(score), processDate(date)));
+}
+
+void eraseScoresFile()
+{
+    ofstream fout;
+    fout.open(ScoresFile, ofstream::out | ofstream::trunc);
+    fout.close();
+}
+
+int numOfLines(const char* fileName)
+{
+    int numOfScores = 0;
+    ifstream fin(fileName);
+    numOfScores = count(istreambuf_iterator<char>(fin), istreambuf_iterator<char>(), '\n');
+    fin.close();
+    return(numOfScores);
+}
+
+void writeScoresToFile(Score scores[MaxNumberOfScores], int numOfScores)
+{
+    ofstream fout;
+    fout.open(ScoresFile, ios::trunc | ios::binary);
+    for (int i = 0; i < numOfScores; i++)
+    {
+        char* buffer = new char[33];
+        strcpy(buffer, scores[i].getName());
+        strcat(buffer, "\n");
+        fout.write(buffer, strlen(buffer));
+        delete buffer;
+    }
+    fout.close();
+}
+
+void sortScores(Score scores[], int numOfScores) {
+    Score temp;
+    for (int i = 0; i < numOfScores - 1; i++) {
+        int max = i;
+        for (int j = i + 1; j < numOfScores; j++)
+            if (scores[max] < scores[j])
+        max = j;
+        temp = scores[i];
+        scores[i] = scores[max];
+        scores[max] = temp;
+    }
 }
 
 int main()
 {
-//    Score scores[MaxNumberOfScores];
+    Score scores[MaxNumberOfScores];
+    int numOfScores = 0;
+    Score newScore;
+    bool updateScores = false;
 
     ifstream fin(InputFile);
     if (!fin)
@@ -181,11 +251,40 @@ int main()
         exit(1);
     }
 
-    Score score = processInputFile(fin);
+    eraseScoresFile();
 
-    tm * timeinfo;
+    for (int i = 0; i < numOfLines(InputFile) + 1; i++)
+    {
+        numOfScores = numOfLines(ScoresFile);
+        newScore = processInputFile(fin);
 
-    cout << score.getDate();
+        if(numOfScores < MaxNumberOfScores)
+        {
+            scores[numOfScores++] = newScore;
+            updateScores = true;
+        }
+
+        else if (scores[numOfScores - 1] < newScore)
+        {
+            scores[numOfScores - 1] = newScore;
+            updateScores = true;
+        }
+
+        else
+            updateScores = false;
+
+        if (updateScores)
+        {
+            sortScores(scores, numOfScores);
+            for (int i = 0; i < numOfScores; i++)
+                cout << left << setw(3) << i + 1 << scores[i] << endl;
+            cout << "----------------------------------\n";
+
+            writeScoresToFile(scores, numOfScores);
+        }
+    }
+
+    fin.close();
 
     return(0);
 }
