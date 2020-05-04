@@ -212,14 +212,15 @@ int numOfLines(const char* fileName)
 void writeScoresToFile(Score scores[MaxNumberOfScores], int numOfScores)
 {
     ofstream fout;
-    fout.open(ScoresFile, ios::trunc | ios::binary);
+    fout.open(ScoresFile, ios::trunc | ios::out | ios::binary);
+    if(!fout)
+    {
+        cout << "Error in opening file...\n";
+    }
+
     for (int i = 0; i < numOfScores; i++)
     {
-        char* buffer = new char[33];
-        strcpy(buffer, scores[i].getName());
-        strcat(buffer, "\n");
-        fout.write(buffer, strlen(buffer));
-        delete buffer;
+        fout.write(reinterpret_cast<char*>(&scores[i]), sizeof(scores[i]));
     }
     fout.close();
 }
@@ -235,6 +236,22 @@ void sortScores(Score scores[], int numOfScores) {
         scores[i] = scores[max];
         scores[max] = temp;
     }
+}
+
+int getScoresFromFile(Score* scores)
+{
+    ifstream fin;
+    fin.open(ScoresFile, ios::in | ios::binary);
+    if (!fin)
+    {
+        cout << "Error in opening file...\n";
+    }
+    int i = 0;
+    while (fin.read(reinterpret_cast<char*>(&scores[i]), sizeof(Score)))
+    {
+        i++;
+    }
+    return i;
 }
 
 int main()
@@ -255,7 +272,7 @@ int main()
 
     for (int i = 0; i < numOfLines(InputFile) + 1; i++)
     {
-        numOfScores = numOfLines(ScoresFile);
+        numOfScores = getScoresFromFile(scores);
         newScore = processInputFile(fin);
 
         if(numOfScores < MaxNumberOfScores)
