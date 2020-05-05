@@ -5,23 +5,15 @@
 #include <ctime>
 #include <algorithm>
 
+#include "Date.hpp"
+#include "Score.hpp"
+
 using namespace std;
 
 const char ScoresFile[] = "ass2scoresfile.dat";
 const char InputFile[] = "ass2data.txt";
 const int MaxNumberOfScores = 10;
 
-class Date {
-private:
-    time_t date;
-public:
-    Date(){ date = time(0); }
-    //Date(const Date&) = default;
-    Date(time_t d) { date = d; } // Date in time_t format
-    Date(const char*);
-    friend ostream& operator<<(ostream&, const Date&);
-};
-//Date::Date(const Date&) {}
 Date::Date(const char* RawDate)
 {
     int year, month, day;
@@ -77,21 +69,6 @@ ostream& operator<<(ostream &output, const Date &d)
     output << buffer;
     return output;
 }
-
-class Score {
-private:
-    char name[16];
-    int score;
-    Date date;
-public:
-    Score(){};
-    Score(char*, int, Date);
-    char* getName(){ return name; };
-    int getScore(){ return score; };
-    Date getDate(){ return date; };
-    friend ostream& operator<<(ostream&, const Score&);
-    friend bool operator<(const Score&, const Score&);
-};
 
 Score::Score(char* n, int s, Date d)
 {
@@ -154,7 +131,7 @@ Date processDate(char* RawDate)
 
 ostream& operator<<(ostream &output, const Score &s)
 {
-    output << setw(19) << s.name << setw(2) << s.score << "  " << setw(8) << s.date << endl;
+    output << std::setw(19) << s.name << std::setw(2) << s.score << "  " << std::setw(8) << s.date << endl;
     return output;
 }
 
