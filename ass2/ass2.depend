@@ -1,0 +1,20 @@
+# depslib dependency file v1.0
+1588645932 source:c:\users\amirt\documents\github\cis29\maintaining a highest scores list\app\src\app2.cpp
+	<fstream>
+	<iostream>
+	<cstring>
+	<iomanip>
+	<ctime>
+	<algorithm>
+	"date.hpp"
+	"score.hpp"
+
+1588651972 c:\users\amirt\documents\github\cis29\maintaining a highest scores list\libs\date\inc\date.hpp
+	<ostream>
+	<fstream>
+	<ctime>
+
+1588643409 c:\users\amirt\documents\github\cis29\maintaining a highest scores list\libs\score\inc\score.hpp
+	"Date.hpp"
+	<ostream>
+

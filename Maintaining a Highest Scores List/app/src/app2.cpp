@@ -5,82 +5,14 @@
 #include <ctime>
 #include <algorithm>
 
-#include "Date.hpp"
-#include "Score.hpp"
+#include "date.hpp"
+#include "score.hpp"
 
 using namespace std;
 
 const char ScoresFile[] = "ass2scoresfile.dat";
 const char InputFile[] = "ass2data.txt";
 const int MaxNumberOfScores = 10;
-
-Date::Date(const char* RawDate)
-{
-    int year, month, day;
-
-    tm d = {0};
-    d.tm_isdst = -1;
-
-    char buffer[32];
-    if (!isdigit(RawDate[2]))
-    {
-        if (ispunct(RawDate[2])) // Convert from mm/dd/yy or mm-dd-yy
-        {
-            strncpy(buffer, RawDate, 2);
-            d.tm_mon = stoi(buffer);
-            strncpy(buffer, &RawDate[3], 2);
-            d.tm_mday = stoi(buffer);
-            strncpy(buffer, &RawDate[6], 2);
-            d.tm_year = stoi(buffer) + 100;
-        }
-        else // Convert from ddmmmyy
-        {
-            strncpy(buffer,RawDate, 2);
-            d.tm_mday = stoi(buffer);
-            strncpy(buffer, &RawDate[5], 2);
-            d.tm_year = stoi(buffer) + 100;
-            strncpy(buffer, &RawDate[2], 3);
-
-            for (char &c : buffer)
-                c = tolower(c);
-
-            const char months[12][4] = { "jan", "feb", "mar", "apr", "may", "jun",
-                                         "jul", "aug", "sep", "oct", "nov", "dec" };
-
-            for (int i = 0; i < 12; i++)
-                if (strcmp(buffer, months[i]) == 0)
-                    d.tm_mon = i;
-        }
-        date = mktime(&d);
-    }
-    else if (isdigit(RawDate[2]))
-        date = stoi(RawDate); // Already in the correct format
-    else
-        date = time(0);
-}
-
-ostream& operator<<(ostream &output, const Date &d)
-{
-    struct tm* dateInfo = localtime(&d.date);
-    char buffer [32];
-
-    dateInfo->tm_mon;
-    strftime (buffer, 80, "%m/%d/%y", dateInfo);
-    output << buffer;
-    return output;
-}
-
-Score::Score(char* n, int s, Date d)
-{
-    strcpy(name, n);
-    score = s;
-    date = d;
-}
-
-bool operator<(const Score& a, const Score& b)
-{
-    return a.score < b.score ;
-}
 
 Date processDate(char* RawDate)
 {
@@ -127,12 +59,6 @@ Date processDate(char* RawDate)
     d.tm_mday = day;
 
     return(Date(mktime(&d)));
-}
-
-ostream& operator<<(ostream &output, const Score &s)
-{
-    output << std::setw(19) << s.name << std::setw(2) << s.score << "  " << std::setw(8) << s.date << endl;
-    return output;
 }
 
 Score processInputFile(ifstream &fin){
@@ -225,9 +151,7 @@ int getScoresFromFile(Score* scores)
     }
     int i = 0;
     while (fin.read(reinterpret_cast<char*>(&scores[i]), sizeof(Score)))
-    {
         i++;
-    }
     return i;
 }
 
