@@ -1,3 +1,10 @@
+/******************************
+ * Name: Amir Tadros          *
+ * Assignment # 2             *
+ * Compiler: CodeBlocks 20.03 *
+ * OS: Windows 10             *
+ *****************************/
+
 #include <fstream>
 #include <iostream>
 #include <cstring>
@@ -13,53 +20,6 @@ using namespace std;
 const char ScoresFile[] = "ass2scoresfile.dat";
 const char InputFile[] = "ass2data.txt";
 const int MaxNumberOfScores = 10;
-
-Date processDate(char* RawDate)
-{
-    int year, month, day;
-    char buffer[32];
-    if (!isdigit(RawDate[2]))
-    {
-        if (ispunct(RawDate[2])) // mm/dd/yy or mm-dd-yy
-        {
-            strncpy(buffer, RawDate, 2);
-            month = stoi(buffer);
-            strncpy(buffer, &RawDate[3], 2);
-            day = stoi(buffer);
-            strncpy(buffer, &RawDate[6], 2);
-            year = stoi(buffer);
-        }
-        else if (isalpha(RawDate[2]))// ddmmmyy
-        {
-            strncpy(buffer,RawDate, 2);
-            day = stoi(buffer);
-            strncpy(buffer, &RawDate[5], 2);
-            year = stoi(buffer);
-            strncpy(buffer, &RawDate[2], 3);
-
-            for (char &c : buffer)
-                c = tolower(c);
-
-            const char months[12][4] = { "jan", "feb", "mar", "apr", "may", "jun",
-                                         "jul", "aug", "sep", "oct", "nov", "dec" };
-
-            for (int i = 0; i < 12; i++)
-                if (strcmp(buffer, months[i]) == 0)
-                    month = i;
-        }
-        else
-            return Date(time(0));
-    }
-    else
-        return(stoi(RawDate));
-    tm d = {0};
-    d.tm_isdst = -1;
-    d.tm_year = year + 100;
-    d.tm_mon = month;
-    d.tm_mday = day;
-
-    return(Date(mktime(&d)));
-}
 
 Score processInputFile(ifstream &fin){
     char* name = new char[16];
@@ -93,12 +53,19 @@ Score processInputFile(ifstream &fin){
     char* cleanName = new char[nameLen]; // solve bug in copying
     strcpy(cleanName, name);             // char pointer to char array
     delete name;
-    return(Score(cleanName, stoi(score), processDate(date)));
+    return(Score(cleanName, stoi(score), Date(date)));
 }
 
 void eraseScoresFile()
 {
     ofstream fout;
+
+    if (!fout)
+    {
+        cout << "Error in opening file...\n";
+        exit (EXIT_FAILURE);
+    }
+
     fout.open(ScoresFile, ofstream::out | ofstream::trunc);
     fout.close();
 }
@@ -107,6 +74,13 @@ int numOfLines(const char* fileName)
 {
     int numOfScores = 0;
     ifstream fin(fileName);
+
+    if (!fin)
+    {
+        cout << "Error in opening file...\n";
+        exit (EXIT_FAILURE);
+    }
+
     numOfScores = count(istreambuf_iterator<char>(fin), istreambuf_iterator<char>(), '\n');
     fin.close();
     return(numOfScores);
@@ -119,6 +93,7 @@ void writeScoresToFile(Score scores[MaxNumberOfScores], int numOfScores)
     if(!fout)
     {
         cout << "Error in opening file...\n";
+        exit (EXIT_FAILURE);
     }
 
     for (int i = 0; i < numOfScores; i++)
@@ -145,13 +120,17 @@ int getScoresFromFile(Score* scores)
 {
     ifstream fin;
     fin.open(ScoresFile, ios::in | ios::binary);
+
     if (!fin)
     {
         cout << "Error in opening file...\n";
+        exit (EXIT_FAILURE);
     }
+
     int i = 0;
     while (fin.read(reinterpret_cast<char*>(&scores[i]), sizeof(Score)))
         i++;
+
     return i;
 }
 
@@ -166,7 +145,7 @@ int main()
     if (!fin)
     {
         cout << "Unable to open input file " << InputFile << endl;
-        exit(1);
+        exit (EXIT_FAILURE);
     }
 
     eraseScoresFile();
@@ -195,7 +174,7 @@ int main()
         {
             sortScores(scores, numOfScores);
             for (int i = 0; i < numOfScores; i++)
-                cout << left << setw(3) << i + 1 << scores[i] << endl;
+                cout << left << setw(3) << i + 1 << scores[i];
             cout << "----------------------------------\n";
 
             writeScoresToFile(scores, numOfScores);

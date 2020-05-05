@@ -3,8 +3,6 @@
 #include <cstring>
 #include <ostream>
 
-Date::Date(const Date&) { date = time(0); }
-
 Date::Date(const char* RawDate)
 {
     tm d = {0};
